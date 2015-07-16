@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = RedshiftAdapter::VERSION
   spec.authors       = ["Ben Murphy"]
   spec.email         = ["benm@fonix.com"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.summary       = %q{redshift adapter}
+  spec.description   = %q{redshift adapter}
   spec.homepage      = ""
   spec.license       = "MIT"
 
