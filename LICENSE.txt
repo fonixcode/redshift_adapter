@@ -1,4 +1,4 @@
-Copyright (c) 2015 Fonix
+Copyright (c) 2015 Fonix Mobile Ltd. (UK)
 
 MIT License
 
