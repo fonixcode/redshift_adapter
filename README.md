@@ -55,13 +55,13 @@ Or install it yourself as:
 
 Add the following to database.yml
 
-  my_redshift_db:
-    adapter: redshift
-    host: name.unique.eu-west-1.redshift.amazonaws.co
-    database: dbname
-    port: 5439
-    username: username
-    password: password
+    my_redshift_db:
+      adapter: redshift
+      host: name.unique.eu-west-1.redshift.amazonaws.co
+      database: dbname
+      port: 5439
+      username: username
+      password: password
 
 
 ## Contributing
