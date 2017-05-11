@@ -5,6 +5,7 @@ module ActiveRecord
   module ConnectionHandling
 
     def redshift_connection(config)
+
       conn_params = config.symbolize_keys
 
       conn_params.delete_if { |_, v| v.nil? }
@@ -13,12 +14,14 @@ module ActiveRecord
       conn_params[:user] = conn_params.delete(:username) if conn_params[:username]
       conn_params[:dbname] = conn_params.delete(:database) if conn_params[:database]
 
-      # Forward only valid config params to PGconn.connect.
-      conn_params.keep_if { |k, _| VALID_CONN_PARAMS.include?(k) }
+      # Forward only valid config params to PG::Connection.connect.
+      valid_conn_param_keys = PG::Connection.conndefaults_hash.keys + [:requiressl]
+      conn_params.slice!(*valid_conn_param_keys)
 
-      # The postgres drivers don't allow the creation of an unconnected PGconn object,
+      # The postgres drivers don't allow the creation of an unconnected PG::Connection object,
       # so just pass a nil connection object for the time being.
       ConnectionAdapters::RedshiftAdapter.new(nil, logger, conn_params, config)
+
     end
 
   end
