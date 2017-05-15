@@ -34,7 +34,51 @@ module ActiveRecord
       end 
 
       def postgresql_version
-        80200
+        90100
+      end
+
+      def supports_statement_cache?
+        false
+      end
+
+      def supports_index_sort_order?
+        false
+      end
+
+      def supports_partial_index?
+        false
+      end
+
+      def supports_transaction_isolation?
+        false
+      end
+
+      def supports_foreign_keys?
+        false
+      end
+
+      def supports_views?
+        false
+      end
+
+      def supports_extensions?
+        false
+      end
+
+      def supports_ranges?
+        false
+      end
+
+      def supports_materialized_views?
+        false
+      end
+
+      def use_insert_returning?
+        false
+      end
+
+      def supports_advisory_locks?
+        false
       end
 
       def execute(sql, name=nil)
@@ -48,25 +92,4 @@ module ActiveRecord
   end
 end
 
-module ActiveRecord
-  module ConnectionAdapters
-    module PostgreSQL
-      module OID
-        class TypeMapInitializer
-          def query_conditions_for_initial_load(type_map)
-            known_type_names = type_map.keys.map { |n| "'#{n}'" }
-            known_type_types = %w('r' 'e' 'd')
-            <<-SQL % [known_type_names.join(", "), known_type_types.join(", ")]
-              WHERE
-                t.typname IN (%s)
-                OR t.typtype IN (%s)
-                OR t.typinput = 'array_in'::regproc
-                OR t.typelem != 0
-            SQL
-          end
-        end
-      end
-    end
-  end
-end
 
