@@ -81,6 +81,21 @@ module ActiveRecord
         false
       end
 
+      # remove pg_collation join
+      def column_definitions(table_name)
+        query(<<-end_sql, "SCHEMA")
+            SELECT a.attname, format_type(a.atttypid, a.atttypmod),
+                   pg_get_expr(d.adbin, d.adrelid), a.attnotnull, a.atttypid, a.atttypmod,
+                   col_description(a.attrelid, a.attnum) AS comment
+              FROM pg_attribute a
+              LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+              LEFT JOIN pg_type t ON a.atttypid = t.oid
+             WHERE a.attrelid = #{quote(quote_table_name(table_name))}::regclass
+               AND a.attnum > 0 AND NOT a.attisdropped
+             ORDER BY a.attnum
+        end_sql
+      end
+
       def execute(sql, name=nil)
         if name == "SCHEMA" && sql.start_with?("SET time zone")
           return
