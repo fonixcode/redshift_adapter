@@ -96,6 +96,21 @@ module ActiveRecord
         end_sql
       end
 
+      # FIX primary keys to not include generate_subscripts
+      def primary_keys(table_name) # :nodoc:
+        scope = quoted_scope(table_name)
+        select_values(<<-SQL.strip_heredoc, "SCHEMA")
+          SELECT column_name
+            FROM information_schema.key_column_usage kcu
+            JOIN information_schema.table_constraints tc
+           USING (table_schema, table_name, constraint_name)
+           WHERE constraint_type = 'PRIMARY KEY'
+             AND kcu.table_name = #{scope[:name]}
+             AND kcu.table_schema = #{scope[:schema]}
+           ORDER BY kcu.ordinal_position
+        SQL
+      end
+
       def execute(sql, name=nil)
         if name == "SCHEMA" && sql.start_with?("SET time zone")
           return
