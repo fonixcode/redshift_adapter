@@ -82,7 +82,7 @@ module ActiveRecord
       end
 
       def execute(sql, name=nil)
-        if name == "SCHEMA" && sql.start_with?("SET SESSION time zone")
+        if name == "SCHEMA" && sql.start_with?("SET SESSION timezone")
           return
         else
           super
