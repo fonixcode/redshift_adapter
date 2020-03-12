@@ -81,6 +81,14 @@ module ActiveRecord
         false
       end
 
+      def execute(sql, name=nil)
+        if name == "SCHEMA" && sql.start_with?("SET SESSION time zone")
+          return
+        else
+          super
+        end
+      end
+
       # remove pg_collation join
       def column_definitions(table_name)
         query(<<-end_sql, "SCHEMA")
