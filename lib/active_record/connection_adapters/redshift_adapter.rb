@@ -34,7 +34,7 @@ module ActiveRecord
       end
 
       def postgresql_version
-        90400
+        90500
       end
 
       def supports_statement_cache?
