@@ -15,10 +15,9 @@ module ActiveRecord
       conn_params[:dbname] = conn_params.delete(:database) if conn_params[:database]
 
       # Forward only valid config params to PG::Connection.connect.
-      valid_conn_param_keys = PG::Connection.conndefaults_hash.keys + [:requiressl]
-      conn_params.slice!(*valid_conn_param_keys)
+      conn_params.keep_if { |k, _| VALID_CONN_PARAMS.include?(k) }
 
-      # The postgres drivers don't allow the creation of an unconnected PG::Connection object,
+      # The postgres drivers don't allow the creation of an unconnected PGconn object,
       # so just pass a nil connection object for the time being.
       ConnectionAdapters::RedshiftAdapter.new(nil, logger, conn_params, config)
 
@@ -37,85 +36,33 @@ module ActiveRecord
         80200
       end
 
-      def supports_statement_cache?
-        false
-      end
-
-      def supports_index_sort_order?
-        false
-      end
-
-      def supports_partial_index?
-        false
-      end
-
-      def supports_transaction_isolation?
-        false
-      end
-
-      def supports_foreign_keys?
-        false
-      end
-
-      def supports_views?
-        false
-      end
-
-      def supports_extensions?
-        false
-      end
-
-      def supports_ranges?
-        false
-      end
-
-      def supports_materialized_views?
-        false
-      end
-
-      def use_insert_returning?
-        false
-      end
-
-      def supports_advisory_locks?
-        false
-      end
-
-      # remove pg_collation join
-      def column_definitions(table_name)
-        query(<<-end_sql, "SCHEMA")
-            SELECT a.attname, format_type(a.atttypid, a.atttypmod),
-                   pg_get_expr(d.adbin, d.adrelid), a.attnotnull, a.atttypid, a.atttypmod,
-                   col_description(a.attrelid, a.attnum) AS comment
-              FROM pg_attribute a
-              LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
-              LEFT JOIN pg_type t ON a.atttypid = t.oid
-             WHERE a.attrelid = #{quote(quote_table_name(table_name))}::regclass
-               AND a.attnum > 0 AND NOT a.attisdropped
-             ORDER BY a.attnum
-        end_sql
-      end
-
-      # FIX primary keys to not include generate_subscripts
-      def primary_keys(table_name) # :nodoc:
-        scope = quoted_scope(table_name)
-        select_values(<<-SQL.strip_heredoc, "SCHEMA")
-          SELECT column_name
-            FROM information_schema.key_column_usage kcu
-            JOIN information_schema.table_constraints tc
-           USING (table_schema, table_name, constraint_name)
-           WHERE constraint_type = 'PRIMARY KEY'
-             AND kcu.table_name = #{scope[:name]}
-             AND kcu.table_schema = #{scope[:schema]}
-           ORDER BY kcu.ordinal_position
-        SQL
-      end
-
       def execute(sql, name=nil)
         if name == "SCHEMA" && sql.start_with?("SET time zone")
           return
         else
           super
+        end
+      end
+    end
+  end
+
+  module ActiveRecord
+    module ConnectionAdapters
+      module PostgreSQL
+        module OID
+          class TypeMapInitializer
+            def query_conditions_for_initial_load
+              known_type_names = @store.keys.map { |n| "'#{n}'" }
+              known_type_types = %w('r' 'e' 'd')
+              <<-SQL % [known_type_names.join(", "), known_type_types.join(", ")]
+                WHERE
+                  t.typname IN (%s)
+                  OR t.typtype IN (%s)
+                  OR t.typinput = 'array_in'::regproc
+                  OR t.typelem != 0
+              SQL
+            end
+          end
         end
       end
     end
