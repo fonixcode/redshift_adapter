@@ -16,7 +16,7 @@ module ActiveRecord
 
       # Forward only valid config params to PG::Connection.connect.
       valid_conn_param_keys = PG::Connection.conndefaults_hash.keys + [:requiressl]
-      conn_params.slice!(*valid_conn_param_keys
+      conn_params.slice!(*valid_conn_param_keys)
 
       # The postgres drivers don't allow the creation of an unconnected PGconn object,
       # so just pass a nil connection object for the time being.
