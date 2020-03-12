@@ -31,10 +31,10 @@ module ActiveRecord
       def set_standard_conforming_strings
       end
       def client_min_messages=(level)
-      end 
+      end
 
       def postgresql_version
-        90100
+        80200
       end
 
       def supports_statement_cache?
@@ -121,5 +121,3 @@ module ActiveRecord
     end
   end
 end
-
-
