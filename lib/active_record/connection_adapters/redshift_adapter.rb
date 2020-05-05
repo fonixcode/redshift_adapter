@@ -27,14 +27,66 @@ module ActiveRecord
   end
 
   module ConnectionAdapters
-    class RedshiftAdapter < PostgreSQLAdapter
+    class PostgreSQLAdapter < AbstractAdapter
+      def configure_connection
+        if @config[:encoding]
+          @connection.set_client_encoding(@config[:encoding])
+        end
+        self.schema_search_path = @config[:schema_search_path] || @config[:schema_order]
+
+        # SET statements from :variables config hash
+        # http://www.postgresql.org/docs/8.3/static/sql-set.html
+        variables = @config[:variables] || {}
+        variables.map do |k, v|
+          if v == ':default' || v == :default
+            # Sets the value to the global or compile default
+            execute("SET SESSION #{k} TO DEFAULT", 'SCHEMA')
+          elsif !v.nil?
+            execute("SET SESSION #{k} TO #{quote(v)}", 'SCHEMA')
+          end
+        end
+      end
+
+
+      def load_additional_types(oids = nil)
+        initializer = OID::TypeMapInitializer.new(type_map)
+        if supports_ranges?
+          query = <<~SQL
+            SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, r.rngsubtype, t.typtype, t.typbasetype
+            FROM pg_type as t
+            LEFT JOIN pg_range as r ON oid = rngtypid
+          SQL
+
+          if oids
+            query += "WHERE t.oid::integer IN (%s)" % oids.join(", ")
+          else
+            query += initializer.query_conditions_for_initial_load
+          end
+
+          execute_and_clear(query, "SCHEMA", []) do |records|
+            initializer.run(records)
+          end
+        end
+      end
+
+    end
+
+      class RedshiftAdapter < PostgreSQLAdapter
+
+      def initialize(connection, logger, connection_parameters, config)
+        @connection = PG::Connection.connect(connection_parameters)
+        super(@connection, logger, connection_parameters, config)
+        @use_insert_returning = @config.key?(:insert_returning) ? self.class.type_cast_config_to_boolean(@config[:insert_returning]) : false
+      end
+
+      
       def set_standard_conforming_strings
       end
       def client_min_messages=(level)
       end 
 
-      def postgresql_version
-        90100
+      def database_version
+        90500
       end
 
       def supports_statement_cache?
@@ -80,6 +132,11 @@ module ActiveRecord
       def supports_advisory_locks?
         false
       end
+
+      def supports_ranges?
+        false
+      end
+
 
       # remove pg_collation join
       def column_definitions(table_name)
