@@ -50,28 +50,31 @@ module ActiveRecord
 
       def load_additional_types(oids = nil)
         initializer = OID::TypeMapInitializer.new(type_map)
+
         if supports_ranges?
-          query = <<~SQL
+          query = <<-SQL
             SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, r.rngsubtype, t.typtype, t.typbasetype
             FROM pg_type as t
             LEFT JOIN pg_range as r ON oid = rngtypid
           SQL
+        else
+          query = <<-SQL
+            SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, t.typtype, t.typbasetype
+            FROM pg_type as t
+          SQL
+        end
 
-          if oids
-            query += "WHERE t.oid::integer IN (%s)" % oids.join(", ")
-          else
-            query += initializer.query_conditions_for_initial_load
-          end
+        if oids
+          query += "WHERE t.oid::integer IN (%s)" % oids.join(", ")
+        end
 
-          execute_and_clear(query, "SCHEMA", []) do |records|
-            initializer.run(records)
-          end
+        execute_and_clear(query, 'SCHEMA', []) do |records|
+          initializer.run(records)
         end
       end
-
     end
 
-      class RedshiftAdapter < PostgreSQLAdapter
+    class RedshiftAdapter < PostgreSQLAdapter
 
       def initialize(connection, logger, connection_parameters, config)
         @connection = PG::Connection.connect(connection_parameters)
