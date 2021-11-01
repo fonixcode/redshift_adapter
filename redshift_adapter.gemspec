@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = RedshiftAdapter::VERSION
   spec.authors       = ["Ben Murphy"]
   spec.email         = ["benm@fonix.com"]
-  spec.summary       = %q{Amazon Redshift Adapter for Rails 4}
-  spec.description   = %q{Amazon Redshift Adapter for Rails 4}
+  spec.summary       = %q{Amazon Redshift Adapter for Rails 6}
+  spec.description   = %q{Amazon Redshift Adapter for Rails 6}
   spec.homepage      = ""
   spec.license       = "MIT"
 
@@ -18,6 +18,6 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_development_dependency "bundler", "~> 1.7"
-  spec.add_development_dependency "rake", "~> 10.0"
+  spec.add_development_dependency "bundler", "~> 2.2.16"
+  spec.add_development_dependency "rake", "~> 13.0"
 end
