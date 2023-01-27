@@ -58,7 +58,7 @@ module ActiveRecord
         # if YES we will use it and if NO we will assume it is true
 
         supports_ranges = true
-        if self.method_defined? :supports_ranges?
+        if self.class.method_defined? :supports_ranges?
           supports_ranges = supports_ranges?
         end
 
