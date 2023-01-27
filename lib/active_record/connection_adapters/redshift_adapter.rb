@@ -51,7 +51,18 @@ module ActiveRecord
       def load_additional_types(oids = nil)
         initializer = OID::TypeMapInitializer.new(type_map)
 
-        if supports_ranges?
+        # rails 6.1 dropped support for supports_ranges? and PG below 9.3
+        # https://guides.rubyonrails.org/6_1_release_notes.html#active-record
+        # Solution:
+        # check if adapter has supports_ranges? defined.
+        # if YES we will use it and if NO we will assume it is true
+
+        supports_ranges = true
+        if self.method_defined? :supports_ranges?
+          supports_ranges = supports_ranges?
+        end
+
+        if supports_ranges
           query = <<-SQL
             SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, r.rngsubtype, t.typtype, t.typbasetype
             FROM pg_type as t
@@ -82,11 +93,11 @@ module ActiveRecord
         @use_insert_returning = @config.key?(:insert_returning) ? self.class.type_cast_config_to_boolean(@config[:insert_returning]) : false
       end
 
-      
+
       def set_standard_conforming_strings
       end
       def client_min_messages=(level)
-      end 
+      end
 
       def database_version
         90500
